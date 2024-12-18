@@ -35,7 +35,7 @@
 					@click="saveCheck"
 					:disabled="!isCheckValidate"
 				>
-					Save {{ !isCheckValidate }}
+					Save
 				</button>
 			</div>
 		</div>
