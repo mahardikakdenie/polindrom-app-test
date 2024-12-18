@@ -11,11 +11,11 @@
 					type="text"
 					class="input-container w-full border focus:outline-none focus:ring-2 focus:ring-purple-500"
 					:class="{
-						'border-red-400 text-red-500': !isPolindrom && textResult,
+						'border-red-400 text-red-500': !isPolindrom && textResult && isCheckValidate,
 					}"
 					placeholder="Enter a sentence to check"
 				/>
-				<div v-if="textResult" class="mt-2 text-sm font-semibold">
+				<div v-if="isCheckValidate" class="mt-2 text-sm font-semibold">
 					<span
 						:class="{
 							'text-red-500': !isPolindrom,
@@ -83,7 +83,7 @@
 						<td class="px-6 py-3 border-b border-gray-300">
 							<button
 								class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-								@click="deleteCheck(index)">
+								@click="deleteCheck(index, item._id)">
 								Delete
 							</button>
 						</td>
@@ -95,11 +95,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { createData, deleteData, getData } from './libs/polindroms';
 
 // Reactive variables
 const str = ref<string>('');
-const savedChecks = ref<{ sentence: string; isPolindrom: boolean }[]>([]);
+const savedChecks = ref<{ _id?: string; sentence: string; isPolindrom: boolean }[]>([]);
 const isPolindrom = ref<boolean>(false);
 const textResult = computed(() =>
 	isPolindrom.value
@@ -123,16 +124,54 @@ const saveCheck = (): void => {
 		return;
 	}
 
-  console.log('hgalo : ', str.value);
-	savedChecks.value.push({ sentence: str.value, isPolindrom: isPolindrom.value });
+  createPolindromData(str.value);
 	str.value = '';
 	alert('Saved successfully.');
   isCheckValidate.value = false;
 };
 
-const deleteCheck = (index: number): void => {
-	savedChecks.value.splice(index, 1);
+const getDataPolindrom = () => {
+  const callback = ((res: any) => {
+    console.log(res?.data);
+    savedChecks.value = res?.data ?? [];
+  });
+
+  const err = ((e: any) => {
+    console.log(e);
+  });
+
+  getData(null, callback, err);
 };
+
+const createPolindromData = (sentence: string) => {
+  const params = {
+    sentence,
+  }
+
+  const callback = ((res: any) => {
+    console.log(res?.data);
+    savedChecks.value.push({ _id: res?.data?._id ,sentence: res?.data.sentence, isPolindrom: res?.data.isPolindrom });
+  });
+
+  const err = ((e: any) => {
+    console.log(e);
+  });
+
+  createData(params, callback, err);
+};
+
+const deleteCheck = (index: number, id?: string): void => {
+  
+  const callback = () => {
+    savedChecks.value.splice(index, 1);
+  }
+
+  deleteData(id, callback, (e: any) => console.log(e));
+};
+
+onMounted(() => {
+  getDataPolindrom();
+});
 </script>
 
 <style scoped>
